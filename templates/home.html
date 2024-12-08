@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management API</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+        }
+        h1 {
+            color: #4CAF50;
+            font-size: 36px;
+        }
+        h2 {
+            color: #777;
+            margin: 20px 0;
+            font-size: 24px;
+        }
+        .details {
+            font-size: 18px;
+            color: #555;
+        }
+        .details a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .details a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Welcome to the Employee Management API!</h1>
+        <h2>Version: {{ version }}</h2>
+        <div class="details">
+            <p>Explore our API to manage employee records efficiently.</p>
+            <p><a href="/employee">Manage Employees</a></p>
+            <p><a href="/health">Health Check</a></p>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+        - name: flask-app
+          image: ashleypearl/tech-consulting-final-project-app:latest
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: flask-config  # ConfigMap for non-sensitive environment variables
+            - secretRef:
+                name: mysql-secrets  # Secret for MySQL sensitive data (user, password)
+          env:
+            - name: MYSQL_HOST
+              value: mysql-service  # Ensure the service name is correct
+            - name: MYSQL_PORT
+              value: "3306"  # Default MySQL port
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"

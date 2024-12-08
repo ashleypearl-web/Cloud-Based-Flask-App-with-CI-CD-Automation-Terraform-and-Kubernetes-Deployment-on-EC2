@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mysql:
+    build:
+      context: ./mysql  # Pointing to the correct directory for building
+    image: mysql_image   # Set the image name here
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword  # Set root password here
+      MYSQL_DATABASE: employees_db  # Database to be created
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/database_employee.sql:/docker-entrypoint-initdb.d/database_employee.sql  # Mount your initial database script
+    networks:
+      - flask_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  app:
+    build: .  # Assuming your app's Dockerfile is in the root directory
+    command: sh -c "sleep 20s ; flask run --host=0.0.0.0"  # Added a longer delay (20s) to allow MySQL to initialize
+    environment:
+      MYSQL_HOST: mysql  # The MySQL service name (service name, not localhost)
+      MYSQL_USER: root
+      MYSQL_PASSWORD: rootpassword
+      MYSQL_DB: employees_db
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy  # Wait for MySQL to be healthy before starting Flask
+    networks:
+      - flask_network
+
+volumes:
+  mysql-data:
+
+networks:
+  flask_network:
+    driver: bridge

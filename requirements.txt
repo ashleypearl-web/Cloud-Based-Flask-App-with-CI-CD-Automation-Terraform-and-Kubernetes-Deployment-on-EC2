@@ -1,0 +1,13 @@
+Flask==2.2.2
+Flask-SQLAlchemy==2.5.1
+Flask-Migrate==3.1.0
+Flask-Smorest
+Flask-JWT-Extended
+pymysql==1.0.2
+passlib
+marshmallow
+python-dotenv
+gunicorn
+Werkzeug==2.2.2
+SQLAlchemy==1.4.41
+cryptography>=3.4.0
