@@ -1,0 +1,2 @@
+# Cloud-Based-Flask-App-with-CI-CD-Automation-Terraform-and-Kubernetes-Deployment-on-EC2
+This is a scalable web application using Python Flask, deployed using Docker and Kubernetes, integrated with a MySQL database using SQLAlchemy, and implement CI/CD pipeline using Github actions. Automate infrastructure provisioning using Terraform and expose the application. Kops will create EC2 instances for Kubernetes setup.
