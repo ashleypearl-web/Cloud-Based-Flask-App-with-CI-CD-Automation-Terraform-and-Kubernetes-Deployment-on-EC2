@@ -14,11 +14,20 @@ pipeline {
                     echo "Checking python version"
                     python3 --version
                     echo "Checking pip version"
-                    pip3 --version
+                    pip3 --version || (echo "pip3 not found, installing..." && sudo apt-get install -y python3-pip)
                     echo "Checking if python3 is in path"
                     which python3
                     echo "Checking if pip3 is in path"
                     which pip3
+
+                    # Ensure virtual environment is created if not already
+                    if [ ! -d "venv" ]; then
+                        python3 -m venv venv
+                    fi
+
+                    # Activate virtual environment and install dependencies
+                    source venv/bin/activate
+                    pip install -r requirements.txt
                 '''
             }
             post {
@@ -32,6 +41,7 @@ pipeline {
         stage('UNIT TEST Flask App') {
             steps {
                 sh '''
+                    # Activate virtual environment
                     source venv/bin/activate
                     pytest --maxfail=1 --disable-warnings -q
                 '''
@@ -42,6 +52,7 @@ pipeline {
         stage('CODE ANALYSIS WITH FLAKE8') {
             steps {
                 sh '''
+                    # Activate virtual environment
                     source venv/bin/activate
                     flake8 .
                 '''
