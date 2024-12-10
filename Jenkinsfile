@@ -1,109 +1,133 @@
 pipeline {
-
     agent any
-/*
-	tools {
-        maven "maven3"
-    }
-*/
+
     environment {
-        registry = "kubeimran/vproappdock"
+        registry = "ashleypearl/ashleysdock"
         registryCredential = 'dockerhub'
     }
 
-    stages{
-
-        stage('BUILD'){
+    stages {
+        // Stage 1: Build the Flask app - install dependencies and run tests
+        stage('BUILD Flask App') {
             steps {
-                sh 'mvn clean install -DskipTests'
+                sh '''
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    pip install -r requirements.txt
+                    pip install pytest
+                    '''
             }
             post {
                 success {
-                    echo 'Now Archiving...'
-                    archiveArtifacts artifacts: '**/target/*.war'
+                    echo 'Flask app build successful. Archiving artifacts...'
                 }
             }
         }
 
-        stage('UNIT TEST'){
+        // Stage 2: Unit Test the Flask app
+        stage('UNIT TEST Flask App') {
             steps {
-                sh 'mvn test'
+                sh '''
+                    source venv/bin/activate
+                    pytest --maxfail=1 --disable-warnings -q
+                '''
             }
         }
 
-        stage('INTEGRATION TEST'){
+        // Stage 3: Code analysis with flake8 or other tools
+        stage('CODE ANALYSIS WITH FLAKE8') {
             steps {
-                sh 'mvn verify -DskipUnitTests'
-            }
-        }
-
-        stage ('CODE ANALYSIS WITH CHECKSTYLE'){
-            steps {
-                sh 'mvn checkstyle:checkstyle'
+                sh '''
+                    source venv/bin/activate
+                    flake8 .
+                '''
             }
             post {
                 success {
-                    echo 'Generated Analysis Result'
+                    echo 'Generated Flake8 Analysis Results'
                 }
             }
         }
 
-        stage('CODE ANALYSIS with SONARQUBE') {
-
+        // Stage 4: SonarQube Code Analysis
+        stage('SonarQube Code Analysis') {
             environment {
-                scannerHome = tool 'mysonarscanner4'
+                scannerHome = tool 'sonar-scanner'  // Ensure SonarQube scanner is configured
             }
-
             steps {
-                withSonarQubeEnv('sonar-pro') {
-                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
-                   -Dsonar.projectName=vprofile-repo \
-                   -Dsonar.projectVersion=1.0 \
-                   -Dsonar.sources=src/ \
-                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
-                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
-                }
-
-                timeout(time: 10, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                withSonarQubeEnv('sonarserver') {
+                    sh '''${scannerHome}/bin/sonar-scanner \
+                           -Dsonar.projectKey=ashleyprofile \
+                           -Dsonar.projectName=ashley-repo \
+                           -Dsonar.projectVersion=1.0 \
+                           -Dsonar.sources=. \
+                           -Dsonar.language=python \
+                           -Dsonar.python.coverage.reportPaths=coverage-report.xml'''
                 }
             }
-        }
-
-        stage('Build App Image') {
-          steps {
-            script {
-              dockerImage = docker.build registry + ":V$BUILD_NUMBER"
+            post {
+                success {
+                    echo 'SonarQube analysis completed successfully'
+                }
+                failure {
+                    echo 'SonarQube analysis failed'
+                }
             }
-          }
         }
 
-        stage('Upload Image'){
-          steps{
-            script {
-              docker.withRegistry('', registryCredential) {
-                dockerImage.push("V$BUILD_NUMBER")
-                dockerImage.push('latest')
-              }
+        // Stage 5: Build Docker Image for Flask App
+        stage('Build Flask Docker Image') {
+            steps {
+                script {
+                    // Build Docker image for Flask app
+                    flaskImage = docker.build(registry + "/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
+                }
             }
-          }
         }
 
-        stage('Remove Unused docker image') {
-          steps{
-            sh "docker rmi $registry:V$BUILD_NUMBER"
-          }
+        // Stage 6: Build Docker Image for MySQL Database
+        stage('Build MySQL Docker Image') {
+            steps {
+                script {
+                    // Build Docker image for MySQL (from the mysql directory)
+                    mysqlImage = docker.build(registry + "/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
+                }
+            }
         }
 
+        // Stage 7: Upload Docker Images to Registry
+        stage('Upload Images to Registry') {
+            steps {
+                script {
+                    docker.withRegistry('', registryCredential) {
+                        flaskImage.push("V$BUILD_NUMBER")
+                        flaskImage.push('latest')
+                        mysqlImage.push("V$BUILD_NUMBER")
+                        mysqlImage.push('latest')
+                    }
+                }
+            }
+        }
+
+        // Stage 8: Remove Unused Docker Images from Jenkins Agent
+        stage('Remove Unused Docker Images') {
+            steps {
+                sh "docker rmi $registry/flask-app:V$BUILD_NUMBER"
+                sh "docker rmi $registry/mysql-db:V$BUILD_NUMBER"
+            }
+        }
+
+        // Stage 9: Deploy to Kubernetes using Helm (or other methods)
         stage('Kubernetes Deploy') {
-          agent {label 'KOPS'}
+            agent { label 'KOPS' }
             steps {
-              sh "helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod"
+                sh '''
+                    helm upgrade --install --force ashleyflaskapp helm/Chart \
+                        --set appimage=${registry}/flask-app:V${BUILD_NUMBER} \
+                        --set mysqlimage=${registry}/mysql-db:V${BUILD_NUMBER} \
+                        --namespace prod
+                '''
             }
         }
     }
-
-
 }
