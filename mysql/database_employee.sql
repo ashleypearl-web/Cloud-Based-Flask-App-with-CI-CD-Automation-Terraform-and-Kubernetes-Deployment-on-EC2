@@ -25,4 +25,3 @@ VALUES
     ('EMP002', 'Jane Smith', 'Manager', 'jane.smith@example.com'),
     ('EMP003', 'Alice Johnson', 'HR', 'alice.johnson@example.com'),
     ('EMP004', 'Bob Brown', 'Sales', 'bob.brown@example.com');
-

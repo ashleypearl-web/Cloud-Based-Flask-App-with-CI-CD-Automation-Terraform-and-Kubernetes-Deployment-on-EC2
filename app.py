@@ -1,10 +1,9 @@
 import os
-from flask import Flask, jsonify, render_template
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_smorest import Api
 from dotenv import load_dotenv
-from flask.views import MethodView
 from schemas import EmployeeSchema, EmployeeUpdateSchema
 from models import EmployeeModel
 from sqlalchemy.exc import SQLAlchemyError
@@ -45,8 +44,8 @@ def create_app():
     # Import resources after db initialization to avoid circular import
     from resources.employee import blp as employee_blp
 
-    # Register the blueprints
-    api.register_blueprint(employee_blp)
+    # Register the blueprints (change to '/api' prefix for API routes)
+    api.register_blueprint(employee_blp, url_prefix='/api')
 
     # Health check endpoint
     @app.route("/health", methods=["GET"])
@@ -64,5 +63,13 @@ def create_app():
     def home():
         return render_template("home.html", version=app.config["API_VERSION"])
 
-    return app
+    # New route to display the employee list (render as HTML)
+    @app.route("/employee", methods=["GET"])
+    def list_employees():
+        # Query all employees from the EmployeeModel
+        employees = EmployeeModel.query.all()
 
+        # Pass the employees data to the template
+        return render_template("employees.html", employees=employees)
+
+    return app

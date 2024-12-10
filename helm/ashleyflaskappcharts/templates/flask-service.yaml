@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+spec:
+  selector:
+    app: flask-app
+  ports:
+    - protocol: TCP
+      port: {{ .Values.services.flask.port }}
+      targetPort: {{ .Values.services.flask.targetPort }}
+  type: {{ .Values.services.flask.type }}

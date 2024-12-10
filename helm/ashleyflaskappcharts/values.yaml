@@ -1,0 +1,39 @@
+flask:
+  image:
+    repository: ashleypearl/tech-consulting-final-project-app
+    tag: latest
+  replicaCount: 1
+  config:
+    FLASK_ENV: "production"
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  
+mysql:
+  image:
+    repository: ashleypearl/mysql_image
+    tag: latest
+  replicaCount: 1
+  rootPassword: "rootpassword"  # Plain text value, Helm will base64 encode it in the Secret
+  database: "taskdb"
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  
+services:
+  flask:
+    port: 80
+    targetPort: 5000
+    type: LoadBalancer
+  mysql:
+    port: 3306
+    targetPort: 3306
+    type: ClusterIP  # Adjust as needed (ClusterIP, NodePort, LoadBalancer)

@@ -46,10 +46,25 @@ if ! kops version; then
     exit 1
 fi
 
+# Install Helm
+echo "Installing Helm..."
+curl https://get.helm.sh/helm-v3.10.3-linux-amd64.tar.gz -o helm.tar.gz
+tar -zxvf helm.tar.gz
+sudo mv linux-amd64/helm /usr/local/bin/helm
+rm -rf linux-amd64 helm.tar.gz
+
+# Verify Helm installation
+echo "Verifying Helm installation..."
+if ! helm version --short; then
+    echo "Helm installation failed. Exiting..."
+    exit 1
+fi
+
 # Verify installations
 echo "Verifying installations..."
 kubectl version --client
 kops version
+helm version --short
 
 # Use the SSH public key from the key pair created by Terraform
 KOPS_SSH_PUBLIC_KEY="/tmp/kops_ssh_key.pub"

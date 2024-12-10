@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  selector:
+    app: mysql-db
+  ports:
+    - protocol: TCP
+      port: {{ .Values.services.mysql.port }}
+      targetPort: {{ .Values.services.mysql.targetPort }}
+  clusterIP: None  # Headless service

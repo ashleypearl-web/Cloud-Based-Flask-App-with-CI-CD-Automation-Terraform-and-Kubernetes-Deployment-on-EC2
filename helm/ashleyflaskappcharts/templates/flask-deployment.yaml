@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: {{ .Values.flask.replicaCount }}
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+        - name: flask-app
+          image: "{{ .Values.flask.image.repository }}:{{ .Values.flask.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.services.flask.targetPort }}
+          envFrom:
+            - configMapRef:
+                name: flask-config
+            - secretRef:
+                name: mysql-secrets
+          env:
+            - name: MYSQL_HOST
+              value: mysql-service
+            - name: MYSQL_PORT
+              value: "3306"
+          resources:
+            limits:
+              cpu: {{ .Values.flask.resources.limits.cpu }}
+              memory: {{ .Values.flask.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.flask.resources.requests.cpu }}
+              memory: {{ .Values.flask.resources.requests.memory }}
