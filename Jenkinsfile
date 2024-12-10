@@ -14,7 +14,7 @@ pipeline {
                     echo "Checking python version"
                     python3 --version
                     echo "Checking pip version"
-                    pip3 --version || (echo "pip3 not found, installing..." && sudo apt-get install -y python3-pip)
+                    pip3 --version || (echo "pip3 not found, installing..." && apt-get install -y python3-pip)
                     echo "Checking if python3 is in path"
                     which python3
                     echo "Checking if pip3 is in path"
