@@ -11,13 +11,13 @@ pipeline {
         stage('BUILD Flask App') {
             steps {
                 sh '''
-                    python3 --version
-                    which python3
-                    python3 -m venv venv
-                    source venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                    pip install pytest
+                    sudo python3 --version
+                    sudo which python3
+                    sudo python3 -m venv venv
+                    sudo source venv/bin/activate
+                    sudo pip install --upgrade pip
+                    sudo pip install -r requirements.txt
+                    sudo pip install pytest
                 '''
             }
             post {
