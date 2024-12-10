@@ -11,11 +11,14 @@ pipeline {
         stage('BUILD Flask App') {
             steps {
                 sh '''
+                    python3 --version
+                    which python3
                     python3 -m venv venv
                     source venv/bin/activate
+                    pip install --upgrade pip
                     pip install -r requirements.txt
                     pip install pytest
-                    '''
+                '''
             }
             post {
                 success {
@@ -79,7 +82,6 @@ pipeline {
         stage('Build Flask Docker Image') {
             steps {
                 script {
-                    // Build Docker image for Flask app
                     flaskImage = docker.build(registry + "/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
                 }
             }
@@ -89,7 +91,6 @@ pipeline {
         stage('Build MySQL Docker Image') {
             steps {
                 script {
-                    // Build Docker image for MySQL (from the mysql directory)
                     mysqlImage = docker.build(registry + "/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
                 }
             }
@@ -122,6 +123,8 @@ pipeline {
             agent { label 'KOPS' }
             steps {
                 sh '''
+                    helm version
+                    kubectl version --client
                     helm upgrade --install --force ashleyflaskapp helm/Chart \
                         --set appimage=${registry}/flask-app:V${BUILD_NUMBER} \
                         --set mysqlimage=${registry}/mysql-db:V${BUILD_NUMBER} \
