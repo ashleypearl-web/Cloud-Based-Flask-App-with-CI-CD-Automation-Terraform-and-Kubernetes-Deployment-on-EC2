@@ -8,6 +8,8 @@ pipeline {
     environment {
         registry = "ashleypearl/ashleysdock"
         registryCredential = 'dockerhub'
+        // Suppress Python warnings globally
+        PYTHONWARNINGS = "ignore"
     }
 
     stages {
@@ -87,6 +89,7 @@ pipeline {
                     . venv/bin/activate
                     
                     # Run flake8 with specific ignore flags to skip warnings about invalid escape sequences (W605)
+                    # Also ignoring warnings about long lines (E501), whitespace issues (W503), etc.
                     flake8 --ignore=E501,W503,S001,W605 .
                 '''
             }
