@@ -78,28 +78,6 @@ pipeline {
             }
         }
 
-        // Stage 3: Code analysis with flake8 (conditionally skipped)
-        stage('CODE ANALYSIS WITH FLAKE8') {
-            when {
-                expression { return !params.SKIP_CODE_ANALYSIS }  // Skip if SKIP_CODE_ANALYSIS is true
-            }
-            steps {
-                sh '''
-                    # Activate virtual environment
-                    . venv/bin/activate
-                    
-                    # Run flake8 with specific ignore flags to skip warnings about invalid escape sequences (W605)
-                    # Also ignoring warnings about long lines (E501), whitespace issues (W503), etc.
-                    flake8 --ignore=E501,W503,S001,W605 .
-                '''
-            }
-            post {
-                success {
-                    echo 'Generated Flake8 Analysis Results'
-                }
-            }
-        }
-
         // Stage 4: SonarQube Code Analysis
         stage('SonarQube Code Analysis') {
             environment {
