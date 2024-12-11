@@ -26,7 +26,7 @@ pipeline {
                     fi
 
                     # Activate virtual environment and install dependencies
-                    . venv/bin/activate
+                    . venv/bin/activate  # Use `.` instead of `source`
                     pip install -r requirements.txt
                 '''
             }
@@ -42,7 +42,7 @@ pipeline {
             steps {
                 sh '''
                     # Activate virtual environment
-                    source venv/bin/activate
+                    . venv/bin/activate  # Use `.` instead of `source`
                     pytest --maxfail=1 --disable-warnings -q
                 '''
             }
@@ -53,7 +53,7 @@ pipeline {
             steps {
                 sh '''
                     # Activate virtual environment
-                    source venv/bin/activate
+                    . venv/bin/activate  # Use `.` instead of `source`
                     flake8 .
                 '''
             }
@@ -146,4 +146,5 @@ pipeline {
         }
     }
 }
+
 
