@@ -1,6 +1,10 @@
 pipeline {
     agent { label 'KOPS' }
 
+    parameters {
+        booleanParam(name: 'SKIP_CODE_ANALYSIS', defaultValue: false, description: 'Skip code analysis with flake8')
+    }
+
     environment {
         registry = "ashleypearl/ashleysdock"
         registryCredential = 'dockerhub'
@@ -56,7 +60,7 @@ pipeline {
             steps {
                 sh '''
                     # Activate virtual environment
-                    . venv/bin/activate  # Use `.` instead of `source`
+                    . venv/bin/activate
                     
                     # Run tests if available
                     pytest --maxfail=1 --disable-warnings -q || echo "No tests found"
@@ -72,13 +76,16 @@ pipeline {
             }
         }
 
-        // Stage 3: Code analysis with flake8
+        // Stage 3: Code analysis with flake8 (conditionally skipped)
         stage('CODE ANALYSIS WITH FLAKE8') {
+            when {
+                expression { return !params.SKIP_CODE_ANALYSIS }  // Skip if SKIP_CODE_ANALYSIS is true
+            }
             steps {
                 sh '''
                     # Activate virtual environment
-                    . venv/bin/activate  # Use `.` instead of `source`
-
+                    . venv/bin/activate
+                    
                     # Run flake8 for linting
                     flake8 .
                 '''
@@ -176,5 +183,4 @@ pipeline {
         }
     }
 }
-
 
