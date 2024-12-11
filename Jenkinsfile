@@ -26,7 +26,7 @@ pipeline {
                     fi
 
                     # Activate virtual environment and install dependencies
-                    source venv/bin/activate
+                    . venv/bin/activate
                     pip install -r requirements.txt
                 '''
             }
