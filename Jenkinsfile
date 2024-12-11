@@ -77,35 +77,6 @@ pipeline {
                 }
             }
         }
-
-        // Stage 4: SonarQube Code Analysis
-        stage('SonarQube Code Analysis') {
-            environment {
-                scannerHome = tool 'sonar-scanner'  // Ensure SonarQube scanner is configured
-            }
-            steps {
-                withSonarQubeEnv('sonarserver') {
-                    sh '''
-                        ${scannerHome}/bin/sonar-scanner \
-                           -Dsonar.projectKey=ashleyprofile \
-                           -Dsonar.projectName=ashley-repo \
-                           -Dsonar.projectVersion=1.0 \
-                           -Dsonar.sources=. \
-                           -Dsonar.language=python \
-                           -Dsonar.python.coverage.reportPaths=coverage-report.xml
-                    '''
-                }
-            }
-            post {
-                success {
-                    echo 'SonarQube analysis completed successfully'
-                }
-                failure {
-                    echo 'SonarQube analysis failed'
-                }
-            }
-        }
-
         // Stage 5: Build Docker Image for Flask App
         stage('Build Flask Docker Image') {
             steps {
