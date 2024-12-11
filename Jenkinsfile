@@ -19,15 +19,25 @@ pipeline {
                     which python3
                     echo "Checking if pip3 is in path"
                     which pip3
-
+        
                     # Ensure virtual environment is created if not already
                     if [ ! -d "venv" ]; then
                         python3 -m venv venv
                     fi
-
-                    # Activate virtual environment and install dependencies
-                    . venv/bin/activate  # Use `.` instead of `source`
+        
+                    # Activate virtual environment
+                    . venv/bin/activate
+        
+                    # Check pip install status
+                    echo "Checking installed pip packages..."
+                    pip freeze
+        
+                    # Install dependencies
                     pip install -r requirements.txt
+        
+                    # Check again after installation
+                    echo "Checking installed pip packages after installation..."
+                    pip freeze
                 '''
             }
             post {
