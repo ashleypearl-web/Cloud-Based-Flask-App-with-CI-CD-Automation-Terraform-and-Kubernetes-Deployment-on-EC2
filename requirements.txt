@@ -11,3 +11,5 @@ gunicorn
 Werkzeug==2.2.2
 SQLAlchemy==1.4.41
 cryptography>=3.4.0
+pytest
+
