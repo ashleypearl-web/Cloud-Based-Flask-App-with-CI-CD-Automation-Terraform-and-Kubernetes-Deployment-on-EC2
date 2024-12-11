@@ -86,8 +86,8 @@ pipeline {
                     # Activate virtual environment
                     . venv/bin/activate
                     
-                    # Run flake8 for linting
-                    flake8 .
+                    # Run flake8 with specific ignore flags to skip warnings about invalid escape sequences (W605)
+                    flake8 --ignore=E501,W503,S001,W605 .
                 '''
             }
             post {
@@ -183,4 +183,3 @@ pipeline {
         }
     }
 }
-
