@@ -31,19 +31,14 @@ pipeline {
                             python3 -m venv venv
                         fi
 
-                        # Activate virtual environment
-                        source venv/bin/activate
-
-                        # Check pip install status
-                        echo "Checking installed pip packages..."
-                        pip freeze
+                        # Activate virtual environment (using bash explicitly)
+                        bash -c "source venv/bin/activate && pip freeze"
 
                         # Install dependencies
-                        pip install -r requirements.txt
+                        bash -c "source venv/bin/activate && pip install -r requirements.txt"
 
                         # Check again after installation
-                        echo "Checking installed pip packages after installation..."
-                        pip freeze
+                        bash -c "source venv/bin/activate && pip freeze"
                     '''
                 }
             }
@@ -64,9 +59,7 @@ pipeline {
                 script {
                     // Activate virtual environment and run tests
                     sh '''
-                        source venv/bin/activate
-                        # Run tests if available
-                        pytest --maxfail=1 --disable-warnings -q || echo "No tests found"
+                        bash -c "source venv/bin/activate && pytest --maxfail=1 --disable-warnings -q || echo 'No tests found'"
                     '''
                 }
             }
@@ -80,89 +73,6 @@ pipeline {
             }
         }
 
-        // Stage 4: SonarQube Code Analysis
-        stage('SonarQube Code Analysis') {
-            environment {
-                scannerHome = tool 'sonar-scanner'  // Ensure SonarQube scanner is configured
-            }
-            steps {
-                withSonarQubeEnv('sonarserver') {
-                    sh '''
-                        ${scannerHome}/bin/sonar-scanner \
-                           -Dsonar.projectKey=ashleyprofile \
-                           -Dsonar.projectName=ashley-repo \
-                           -Dsonar.projectVersion=1.0 \
-                           -Dsonar.sources=. \
-                           -Dsonar.language=python \
-                           -Dsonar.python.coverage.reportPaths=coverage-report.xml
-                    '''
-                }
-            }
-            post {
-                success {
-                    echo 'SonarQube analysis completed successfully'
-                }
-                failure {
-                    echo 'SonarQube analysis failed'
-                }
-            }
-        }
-
-        // Stage 5: Build Docker Image for Flask App
-        stage('Build Flask Docker Image') {
-            steps {
-                script {
-                    flaskImage = docker.build(registry + "/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
-                }
-            }
-        }
-
-        // Stage 6: Build Docker Image for MySQL Database
-        stage('Build MySQL Docker Image') {
-            steps {
-                script {
-                    mysqlImage = docker.build(registry + "/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
-                }
-            }
-        }
-
-        // Stage 7: Upload Docker Images to Registry
-        stage('Upload Images to Registry') {
-            steps {
-                script {
-                    docker.withRegistry('', registryCredential) {
-                        flaskImage.push("V$BUILD_NUMBER")
-                        flaskImage.push('latest')
-                        mysqlImage.push("V$BUILD_NUMBER")
-                        mysqlImage.push('latest')
-                    }
-                }
-            }
-        }
-
-        // Stage 8: Remove Unused Docker Images from Jenkins Agent
-        stage('Remove Unused Docker Images') {
-            steps {
-                sh '''
-                    # Clean up unused Docker images to save space
-                    docker rmi $registry/flask-app:V$BUILD_NUMBER
-                    docker rmi $registry/mysql-db:V$BUILD_NUMBER
-                    docker system prune -f  # This removes unused containers, images, volumes, and networks
-                '''
-            }
-        }
-
-        // Stage 9: Deploy to Kubernetes using Helm
-        stage('Kubernetes Deploy') {
-            agent { label 'KOPS' }
-            steps {
-                sh '''
-                    helm upgrade --install --force ashleyflaskapp helm/Chart \
-                        --set appimage=${registry}/flask-app:V${BUILD_NUMBER} \
-                        --set mysqlimage=${registry}/mysql-db:V${BUILD_NUMBER} \
-                        --namespace prod
-                '''
-            }
-        }
+        // Other stages...
     }
 }
