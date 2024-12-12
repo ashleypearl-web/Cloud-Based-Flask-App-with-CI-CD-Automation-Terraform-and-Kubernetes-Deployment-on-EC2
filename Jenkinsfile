@@ -99,6 +99,16 @@ pipeline {
             }
         }
 
+      stage('Cleanup Docker') {
+            steps {
+                sh '''
+                    # Clean up unused Docker images, containers, volumes, and networks
+                    docker system prune -af --volumes
+                '''
+            }
+        }
+
+
         // Stage 5: Build Docker Image for Flask App
         stage('Build Flask Docker Image') {
             steps {
