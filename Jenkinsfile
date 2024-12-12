@@ -81,7 +81,7 @@ pipeline {
         stage('Build Flask Docker Image') {
             steps {
                 script {
-                    flaskImage = docker.build(registry + "/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
+                    flaskImage = sudo docker.build(registry + "/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
                 }
             }
         }
@@ -90,7 +90,7 @@ pipeline {
         stage('Build MySQL Docker Image') {
             steps {
                 script {
-                    mysqlImage = docker.build(registry + "/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
+                    mysqlImage = sudo docker.build(registry + "/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
                 }
             }
         }
