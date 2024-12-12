@@ -134,10 +134,18 @@ pipeline {
         stage('Upload Images to Amazon ECR') {
             steps {
                 script {
-                    // Login to Amazon ECR
+                    // Login to Amazon ECR (ensure AWS CLI is installed first)
                     withCredentials([aws(credentialsId: 'ecr-credentials')]) {
                         sh '''
-                            # Logging into AWS ECR using the provided credentials
+                            # Install AWS CLI if it's not already installed
+                            if ! command -v aws &>/dev/null; then
+                                echo "AWS CLI not found. Installing..."
+                                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                                unzip awscliv2.zip
+                                sudo ./aws/install
+                            fi
+
+                            # Login to AWS ECR
                             $(aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com)
                         '''
 
