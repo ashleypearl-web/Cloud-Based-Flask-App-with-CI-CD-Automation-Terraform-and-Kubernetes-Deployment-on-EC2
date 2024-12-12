@@ -14,35 +14,38 @@ pipeline {
         // Stage 1: Build the Flask app - install dependencies and run tests
         stage('BUILD Flask App') {
             steps {
-                sh '''
-                    echo "Checking python version"
-                    python3 --version
-                    echo "Checking pip version"
-                    pip3 --version || (echo "pip3 not found, installing..." && sudo -u jenkins -H -S apt-get install -y python3-pip)
-                    echo "Checking if python3 is in path"
-                    which python3
-                    echo "Checking if pip3 is in path"
-                    which pip3
+                script {
+                    // Ensure virtual environment is created if not already
+                    sh '''
+                        echo "Checking python version"
+                        python3 --version
+                        echo "Checking pip version"
+                        pip3 --version || (echo "pip3 not found, installing..." && sudo -u jenkins -H -S apt-get install -y python3-pip)
+                        echo "Checking if python3 is in path"
+                        which python3
+                        echo "Checking if pip3 is in path"
+                        which pip3
 
-                    # Ensure virtual environment is created if not already
-                    if [ ! -d "venv" ]; then
-                        python3 -m venv venv
-                    fi
+                        # Create the virtual environment if it doesn't exist
+                        if [ ! -d "venv" ]; then
+                            python3 -m venv venv
+                        fi
 
-                    # Activate virtual environment
-                    . venv/bin/activate
+                        # Activate virtual environment
+                        source venv/bin/activate
 
-                    # Check pip install status
-                    echo "Checking installed pip packages..."
-                    pip freeze
+                        # Check pip install status
+                        echo "Checking installed pip packages..."
+                        pip freeze
 
-                    # Install dependencies
-                    pip install -r requirements.txt
+                        # Install dependencies
+                        pip install -r requirements.txt
 
-                    # Check again after installation
-                    echo "Checking installed pip packages after installation..."
-                    pip freeze
-                '''
+                        # Check again after installation
+                        echo "Checking installed pip packages after installation..."
+                        pip freeze
+                    '''
+                }
             }
             post {
                 success {
@@ -58,13 +61,14 @@ pipeline {
                 expression { fileExists('tests') || fileExists('tests/*.py') }
             }
             steps {
-                sh '''
-                    # Activate virtual environment
-                    . venv/bin/activate
-                    
-                    # Run tests if available
-                    pytest --maxfail=1 --disable-warnings -q || echo "No tests found"
-                '''
+                script {
+                    // Activate virtual environment and run tests
+                    sh '''
+                        source venv/bin/activate
+                        # Run tests if available
+                        pytest --maxfail=1 --disable-warnings -q || echo "No tests found"
+                    '''
+                }
             }
             post {
                 success {
