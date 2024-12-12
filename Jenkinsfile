@@ -70,6 +70,7 @@ pipeline {
             }
         }
 
+        // Stage 3: SonarQube Code Analysis
         stage('SonarQube Code Analysis') {
             environment {
                 scannerHome = tool 'sonar-scanner'  // Ensure SonarQube scanner is configured
@@ -99,7 +100,8 @@ pipeline {
             }
         }
 
-      stage('Cleanup Docker') {
+        // Stage 4: Cleanup Docker
+        stage('Cleanup Docker') {
             steps {
                 sh '''
                     # Clean up unused Docker images, containers, volumes, and networks
@@ -107,7 +109,6 @@ pipeline {
                 '''
             }
         }
-
 
         // Stage 5: Build Docker Image for Flask App
         stage('Build Flask Docker Image') {
@@ -145,9 +146,9 @@ pipeline {
         stage('Remove Unused Docker Images') {
             steps {
                 sh '''
-                    # Clean up unused Docker images to save space
-                    docker rmi $registry/flask-app:V$BUILD_NUMBER
-                    docker rmi $registry/mysql-db:V$BUILD_NUMBER
+                    # Remove the specific images if they're not in use
+                    docker rmi -f $registry/flask-app:V$BUILD_NUMBER || echo "Flask app image in use, skipping removal"
+                    docker rmi -f $registry/mysql-db:V$BUILD_NUMBER || echo "MySQL DB image in use, skipping removal"
                     docker system prune -f  # This removes unused containers, images, volumes, and networks
                 '''
             }
