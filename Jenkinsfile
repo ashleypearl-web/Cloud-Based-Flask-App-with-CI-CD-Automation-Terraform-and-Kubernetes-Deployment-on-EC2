@@ -6,14 +6,15 @@ pipeline {
     }
 
     environment {
-        registry = "ashleypearl/tech-consulting-final-project-app"
-        registryCredential = 'dockerhub'
-        // Correcting JVM options for SonarQube Scanner
+        registry = "816069136612.dkr.ecr.us-east-1.amazonaws.com/tech-consulting-final-project-app"  // ECR repository URI
+        registryCredential = 'ecr-credentials'  // AWS credentials stored in Jenkins (ensure they have permission to access ECR)
         SONAR_SCANNER_OPTS = '--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED'
+        AWS_REGION = 'us-east-1'  // Your AWS region
+        AWS_ACCOUNT_ID = '816069136612'  // Your AWS account ID
     }
 
     stages {
-        // Stage 1: Build the Flask app - install dependencies and run tests
+        // Stage 1: Build the Flask app
         stage('BUILD Flask App') {
             steps {
                 sh '''
@@ -51,7 +52,6 @@ pipeline {
         // Stage 2: Unit Test the Flask app
         stage('UNIT TEST Flask App') {
             when {
-                // Only run this stage if the tests directory exists
                 expression { fileExists('tests') || fileExists('tests/*.py') }
             }
             steps {
@@ -73,8 +73,8 @@ pipeline {
         // Stage 3: SonarQube Code Analysis
         stage('SonarQube Code Analysis') {
             environment {
-                scannerHome = tool 'sonar-scanner'  // Ensure SonarQube scanner is configured
-                sonarUrl = 'http://172.31.22.207:9000'  // Replace with the correct SonarQube server URL
+                scannerHome = tool 'sonar-scanner'
+                sonarUrl = 'http://172.31.22.207:9000'
             }
             steps {
                 withSonarQubeEnv('sonarserver') {
@@ -107,41 +107,44 @@ pipeline {
                     # Clean up unused Docker containers, networks, volumes, and images
                     echo "Pruning unused Docker data..."
                     docker system prune -af --volumes
-        
-                    # Remove specific unused images (if any exist)
-                    docker images -q | xargs docker rmi -f || true
-        
-                    # Optional: Clean up Docker volumes
                     docker volume prune -f || true
-                        '''
+                '''
             }
         }
 
-        // Stage 5: Build Docker Image for Flask App
+        // Stage 5: Build Flask Docker Image
         stage('Build Flask Docker Image') {
             steps {
                 script {
-                    flaskImage = docker.build(registry + "/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
+                    flaskImage = docker.build("${registry}/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
                 }
             }
         }
 
-        // Stage 6: Build Docker Image for MySQL Database
+        // Stage 6: Build MySQL Docker Image
         stage('Build MySQL Docker Image') {
             steps {
                 script {
-                    mysqlImage = docker.build(registry + "/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
+                    mysqlImage = docker.build("${registry}/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
                 }
             }
         }
 
-        // Stage 7: Upload Docker Images to Registry
-        stage('Upload Images to Registry') {
+        // Stage 7: Upload Images to Amazon ECR
+        stage('Upload Images to Amazon ECR') {
             steps {
                 script {
-                    docker.withRegistry('', registryCredential) {
+                    // Login to Amazon ECR
+                    withCredentials([awsCredentials(credentialsId: 'ecr-credentials')]) {
+                        sh '''
+                            $(aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com)
+                        '''
+
+                        // Push Flask image to ECR
                         flaskImage.push("V$BUILD_NUMBER")
                         flaskImage.push('latest')
+
+                        // Push MySQL image to ECR
                         mysqlImage.push("V$BUILD_NUMBER")
                         mysqlImage.push('latest')
                     }
@@ -153,10 +156,9 @@ pipeline {
         stage('Remove Unused Docker Images') {
             steps {
                 sh '''
-                    # Remove the specific images if they're not in use
-                    docker rmi -f $registry/flask-app:V$BUILD_NUMBER || echo "Flask app image in use, skipping removal"
-                    docker rmi -f $registry/mysql-db:V$BUILD_NUMBER || echo "MySQL DB image in use, skipping removal"
-                    docker system prune -f  # This removes unused containers, images, volumes, and networks
+                    docker rmi -f ${registry}/flask-app:V$BUILD_NUMBER || echo "Flask app image in use, skipping removal"
+                    docker rmi -f ${registry}/mysql-db:V$BUILD_NUMBER || echo "MySQL DB image in use, skipping removal"
+                    docker system prune -f
                 '''
             }
         }
