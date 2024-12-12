@@ -1,5 +1,5 @@
 pipeline {
-    agent  { label 'KOPS' }
+    agent any
 
     parameters {
         booleanParam(name: 'SKIP_CODE_ANALYSIS', defaultValue: false, description: 'Skip code analysis with flake8')
@@ -8,8 +8,6 @@ pipeline {
     environment {
         registry = "ashleypearl/ashleysdock"
         registryCredential = 'dockerhub'
-        // Suppress Python warnings globally
-        PYTHONWARNINGS = "ignore"
     }
 
     stages {
@@ -77,11 +75,40 @@ pipeline {
                 }
             }
         }
+
+        // Stage 4: SonarQube Code Analysis
+        stage('SonarQube Code Analysis') {
+            environment {
+                scannerHome = tool 'sonar-scanner'  // Ensure SonarQube scanner is configured
+            }
+            steps {
+                withSonarQubeEnv('sonarserver') {
+                    sh '''
+                        ${scannerHome}/bin/sonar-scanner \
+                           -Dsonar.projectKey=ashleyprofile \
+                           -Dsonar.projectName=ashley-repo \
+                           -Dsonar.projectVersion=1.0 \
+                           -Dsonar.sources=. \
+                           -Dsonar.language=python \
+                           -Dsonar.python.coverage.reportPaths=coverage-report.xml
+                    '''
+                }
+            }
+            post {
+                success {
+                    echo 'SonarQube analysis completed successfully'
+                }
+                failure {
+                    echo 'SonarQube analysis failed'
+                }
+            }
+        }
+
         // Stage 5: Build Docker Image for Flask App
         stage('Build Flask Docker Image') {
             steps {
                 script {
-                    flaskImage = sudo docker.build(registry + "/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
+                    flaskImage = docker.build(registry + "/flask-app:V$BUILD_NUMBER", "-f Dockerfile .")
                 }
             }
         }
@@ -90,7 +117,7 @@ pipeline {
         stage('Build MySQL Docker Image') {
             steps {
                 script {
-                    mysqlImage = sudo docker.build(registry + "/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
+                    mysqlImage = docker.build(registry + "/mysql-db:V$BUILD_NUMBER", "-f mysql/Dockerfile mysql/")
                 }
             }
         }
