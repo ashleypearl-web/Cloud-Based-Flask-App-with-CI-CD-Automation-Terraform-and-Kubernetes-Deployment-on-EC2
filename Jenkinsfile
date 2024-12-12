@@ -72,6 +72,8 @@ pipeline {
             environment {
                 scannerHome = tool 'sonar-scanner'  // Ensure SonarQube scanner is configured
                 sonarUrl = 'http://172.31.22.207:9000'  // Replace with the correct SonarQube server URL
+                // Relaxing Java module restrictions by setting the appropriate JVM options
+                SONAR_SCANNER_OPTS = "-Dsonar.java.options='--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED'"
             }
             steps {
                 withSonarQubeEnv('sonarserver') {
@@ -96,7 +98,6 @@ pipeline {
                 }
             }
         }
-
 
         // Stage 5: Build Docker Image for Flask App
         stage('Build Flask Docker Image') {
