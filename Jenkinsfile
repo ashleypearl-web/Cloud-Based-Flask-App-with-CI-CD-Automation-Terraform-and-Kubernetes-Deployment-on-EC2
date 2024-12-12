@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'KOPS' }
+    agent any
 
     parameters {
         booleanParam(name: 'SKIP_CODE_ANALYSIS', defaultValue: false, description: 'Skip code analysis with flake8')
