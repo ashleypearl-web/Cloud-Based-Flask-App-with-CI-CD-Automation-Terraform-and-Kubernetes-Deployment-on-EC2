@@ -104,9 +104,16 @@ pipeline {
         stage('Cleanup Docker') {
             steps {
                 sh '''
-                    # Clean up unused Docker images, containers, volumes, and networks
+                    # Clean up unused Docker containers, networks, volumes, and images
+                    echo "Pruning unused Docker data..."
                     docker system prune -af --volumes
-                '''
+        
+                    # Remove specific unused images (if any exist)
+                    docker images -q | xargs docker rmi -f || true
+        
+                    # Optional: Clean up Docker volumes
+                    docker volume prune -f || true
+                        '''
             }
         }
 
