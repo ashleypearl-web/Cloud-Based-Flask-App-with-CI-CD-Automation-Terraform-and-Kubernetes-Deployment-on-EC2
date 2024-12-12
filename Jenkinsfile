@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        registry = "ashleypearl/ashleysdock"
+        registry = "ashleypearl/tech-consulting-final-project-app"
         registryCredential = 'dockerhub'
         // Correcting JVM options for SonarQube Scanner
         SONAR_SCANNER_OPTS = '--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED'
