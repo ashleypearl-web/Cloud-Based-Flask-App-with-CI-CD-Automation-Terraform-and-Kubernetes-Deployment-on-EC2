@@ -137,7 +137,12 @@ pipeline {
                     // Login to Amazon ECR (ensure AWS CLI is installed first)
                     withCredentials([aws(credentialsId: 'ecr-credentials')]) {
                         sh '''
-                            # Install AWS CLI if it's not already installed
+                            # Install dependencies including unzip and curl if not installed
+                            if ! command -v unzip &>/dev/null; then
+                                echo "unzip not found, installing..."
+                                sudo apt-get update && sudo apt-get install -y unzip
+                            fi
+
                             if ! command -v aws &>/dev/null; then
                                 echo "AWS CLI not found. Installing..."
                                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
