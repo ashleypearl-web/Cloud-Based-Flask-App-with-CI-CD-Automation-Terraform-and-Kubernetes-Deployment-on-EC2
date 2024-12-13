@@ -147,11 +147,7 @@ pipeline {
                                 echo "AWS CLI not found. Installing..."
                                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                                 unzip -o awscliv2.zip  # -o flag ensures non-interactive unzip
-                                sudo ./aws/install
-                            else
-                                echo "AWS CLI already installed, updating..."
-                                sudo /usr/local/aws-cli/v2/current/bin/aws --version
-                                sudo ./aws/install --update   
+                                sudo ./aws/install --update  
                             fi
 
                             # Login to AWS ECR
