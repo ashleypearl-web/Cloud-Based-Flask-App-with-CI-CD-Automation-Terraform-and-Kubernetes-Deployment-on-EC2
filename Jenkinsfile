@@ -186,10 +186,10 @@ pipeline {
             agent { label 'KOPS' }
             steps {
                 sh '''
-                    helm upgrade --install --force ashleyflaskapp helm/Chart \
-                        --set appimage=${registry}/flask-app:V${BUILD_NUMBER} \
-                        --set mysqlimage=${registry}/mysql-db:V${BUILD_NUMBER} \
-                        --namespace prod
+                    helm upgrade --install --force ashleyflaskapp helm/ashleyflaskappcharts \
+                    --set appimage=${registry}/flask-app:V${BUILD_NUMBER} \
+                    --set mysqlimage=${registry}/mysql-db:V${BUILD_NUMBER} \
+                    --namespace prod
                 '''
             }
         }
