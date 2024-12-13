@@ -1,10 +1,11 @@
 flask:
   image:
-    repository: ashleypearl/tech-consulting-final-project-app
-    tag: latest
+    repository: 816069136612.dkr.ecr.us-east-1.amazonaws.com/tech-consulting-final-project-app/flask-app
+    tag: "V14"
   replicaCount: 1
   config:
     FLASK_ENV: "production"
+    DATABASE_URL: "mysql://root:rootpassword@mysql:3306/taskdb"  # You can replace with actual MySQL connection string
   resources:
     limits:
       cpu: "500m"
@@ -12,13 +13,13 @@ flask:
     requests:
       cpu: "250m"
       memory: "256Mi"
-  
+
 mysql:
   image:
-    repository: ashleypearl/mysql_image
-    tag: latest
+    repository: 816069136612.dkr.ecr.us-east-1.amazonaws.com/tech-consulting-final-project-app/mysql-db
+    tag: "V14"
   replicaCount: 1
-  rootPassword: "rootpassword"  # Plain text value, Helm will base64 encode it in the Secret
+  rootPassword: "rootpassword"  # Consider base64 encoding or using a Kubernetes secret
   database: "taskdb"
   resources:
     limits:
@@ -27,7 +28,7 @@ mysql:
     requests:
       cpu: "250m"
       memory: "256Mi"
-  
+
 services:
   flask:
     port: 80
@@ -36,4 +37,4 @@ services:
   mysql:
     port: 3306
     targetPort: 3306
-    type: ClusterIP  # Adjust as needed (ClusterIP, NodePort, LoadBalancer)
+    type: ClusterIP
