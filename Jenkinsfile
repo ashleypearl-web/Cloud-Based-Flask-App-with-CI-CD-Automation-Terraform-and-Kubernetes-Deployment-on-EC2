@@ -152,6 +152,9 @@ pipeline {
 
                             # Login to AWS ECR
                             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                            # Create the ECR repositories if they don't exist
+                            aws ecr describe-repositories --repository-names flask-app --region ${AWS_REGION} || aws ecr create-repository --repository-name flask-app --region ${AWS_REGION}
+                            aws ecr describe-repositories --repository-names mysql-db --region ${AWS_REGION} || aws ecr create-repository --repository-name mysql-db --region ${AWS_REGION}
                         '''
 
                         // Push Flask image to ECR
