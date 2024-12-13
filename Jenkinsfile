@@ -142,17 +142,25 @@ pipeline {
                                 echo "unzip not found, installing..."
                                 sudo apt-get update && sudo apt-get install -y unzip
                             fi
-
+        
                             if ! command -v aws &>/dev/null; then
                                 echo "AWS CLI not found. Installing..."
                                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                                 unzip awscliv2.zip
                                 sudo ./aws/install
                             fi
-
+        
                             # Login to AWS ECR
                             $(aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com)
                         '''
+
+                // Push Flask image to ECR
+                flaskImage.push("V$BUILD_NUMBER")
+                flaskImage.push('latest')
+
+                // Push MySQL image to ECR
+                mysqlImage.push("V$BUILD_NUMBER")
+                mysqlImage.push('latest')
 
                         // Push Flask image to ECR
                         flaskImage.push("V$BUILD_NUMBER")
