@@ -154,14 +154,6 @@ pipeline {
                             $(aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com)
                         '''
 
-                // Push Flask image to ECR
-                flaskImage.push("V$BUILD_NUMBER")
-                flaskImage.push('latest')
-
-                // Push MySQL image to ECR
-                mysqlImage.push("V$BUILD_NUMBER")
-                mysqlImage.push('latest')
-
                         // Push Flask image to ECR
                         flaskImage.push("V$BUILD_NUMBER")
                         flaskImage.push('latest')
