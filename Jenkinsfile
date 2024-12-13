@@ -137,21 +137,21 @@ pipeline {
                     // Login to Amazon ECR (ensure AWS CLI is installed first)
                     withCredentials([aws(credentialsId: 'ecr-credentials')]) {
                         sh '''
-                            # Install dependencies including unzip and curl if not installed
+                            # Ensure required dependencies are installed
                             if ! command -v unzip &>/dev/null; then
                                 echo "unzip not found, installing..."
                                 sudo apt-get update && sudo apt-get install -y unzip
                             fi
-        
+
                             if ! command -v aws &>/dev/null; then
                                 echo "AWS CLI not found. Installing..."
                                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                                unzip awscliv2.zip
+                                unzip -o awscliv2.zip  # -o flag ensures non-interactive unzip
                                 sudo ./aws/install
                             fi
-        
+
                             # Login to AWS ECR
-                            $(aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com)
+                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
                         '''
 
                         // Push Flask image to ECR
